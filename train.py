@@ -32,33 +32,109 @@ class Params:
 
 
 def get_args():
-    parser = argparse.ArgumentParser('Yet Another EfficientDet Pytorch: SOTA object detection network - Zylo117')
-    parser.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
-    parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
-    parser.add_argument('-n', '--num_workers', type=int, default=12, help='num_workers of dataloader')
-    parser.add_argument('--batch_size', type=int, default=12, help='The number of images per batch among all devices')
-    parser.add_argument('--head_only', type=boolean_string, default=False,
-                        help='whether finetunes only the regressor and the classifier, '
-                             'useful in early stage convergence or small/easy dataset')
+    parser = argparse.ArgumentParser(
+        'Yet Another EfficientDet Pytorch: SOTA object detection network'
+        '- Zylo117'
+    )
+    parser.add_argument(
+        '-p',
+        '--project',
+        type=str,
+        default='coco',
+        help='project file that contains parameters',
+    )
+    parser.add_argument(
+        '-c',
+        '--compound_coef',
+        type=int,
+        default=0,
+        help='coefficients of efficientdet',
+    )
+    parser.add_argument(
+        '-n',
+        '--num_workers',
+        type=int,
+        default=12,
+        help='num_workers of dataloader',
+    )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=12,
+        help='The number of images per batch among all devices',
+    )
+    parser.add_argument(
+        '--head_only',
+        type=boolean_string,
+        default=False,
+        help=('whether finetunes only the regressor and the classifier, '
+              'useful in early stage convergence or small/easy dataset'),
+    )
+
     parser.add_argument('--lr', type=float, default=1e-4)
-    parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
-                                                                   'suggest using \'admaw\' until the'
-                                                                   ' very final stage then switch to \'sgd\'')
+    parser.add_argument(
+        '--optim',
+        type=str,
+        default='adamw',
+        help=('select optimizer for training, suggest using \'admaw\''
+              'until the very final stage then switch to \'sgd\''
+        ),
+    )
     parser.add_argument('--num_epochs', type=int, default=500)
-    parser.add_argument('--val_interval', type=int, default=1, help='Number of epoches between valing phases')
-    parser.add_argument('--save_interval', type=int, default=500, help='Number of steps between saving')
-    parser.add_argument('--es_min_delta', type=float, default=0.0,
-                        help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
-    parser.add_argument('--es_patience', type=int, default=0,
-                        help='Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.')
-    parser.add_argument('--data_path', type=str, default='datasets/', help='the root folder of dataset')
+    parser.add_argument(
+        '--val_interval',
+        type=int,
+        default=1,
+        help='Number of epoches between valing phases',
+    )
+    parser.add_argument(
+        '--save_interval',
+        type=int,
+        default=500,
+        help='Number of steps between saving',
+    )
+    parser.add_argument(
+        '--es_min_delta',
+        type=float,
+        default=0.0,
+        help=('Early stopping\'s parameter: minimum change loss to '
+              'qualify as an improvement'
+        ),
+    )
+    parser.add_argument(
+        '--es_patience',
+        type=int,
+        default=0,
+        help=('Early stopping\'s parameter: number of epochs with no '
+              'improvement after which training will be stopped. Set to '
+              '0 to disable this technique.'
+        ),
+    )
+    parser.add_argument(
+        '--data_path',
+        type=str,
+        default='datasets/',
+        help='the root folder of dataset',
+    )
     parser.add_argument('--log_path', type=str, default='logs/')
-    parser.add_argument('-w', '--load_weights', type=str, default=None,
-                        help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
+    parser.add_argument(
+        '-w',
+        '--load_weights',
+        type=str,
+        default=None,
+        help=('whether to load weights from a checkpoint, set None to '
+              'initialize, set \'last\' to load last checkpoint'
+        ),
+    )
     parser.add_argument('--saved_path', type=str, default='logs/')
-    parser.add_argument('--debug', type=boolean_string, default=False,
-                        help='whether visualize the predicted boxes of training, '
-                             'the output images will be in test/')
+    parser.add_argument(
+        '--debug',
+        type=boolean_string,
+        default=False,
+        help=('whether visualize the predicted boxes of training, the '
+              'output images will be in test/'
+        ),
+    )
 
     args = parser.parse_args()
     return args
@@ -74,10 +150,14 @@ class ModelWithLoss(nn.Module):
     def forward(self, imgs, annotations, obj_list=None):
         _, regression, classification, anchors = self.model(imgs)
         if self.debug:
-            cls_loss, reg_loss = self.criterion(classification, regression, anchors, annotations,
-                                                imgs=imgs, obj_list=obj_list)
+            cls_loss, reg_loss = self.criterion(
+                classification, regression, anchors, annotations,
+                imgs=imgs, obj_list=obj_list
+            )
         else:
-            cls_loss, reg_loss = self.criterion(classification, regression, anchors, annotations)
+            cls_loss, reg_loss = self.criterion(
+                classification, regression, anchors, annotations
+            )
         return cls_loss, reg_loss
 
 
@@ -110,19 +190,33 @@ def train(opt):
                   'num_workers': opt.num_workers}
 
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
-    training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.train_set,
-                               transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
-                                                             Augmenter(),
-                                                             Resizer(input_sizes[opt.compound_coef])]))
+    training_set = CocoDataset(
+        root_dir=os.path.join(opt.data_path, params.project_name),
+        set=params.train_set,
+        transform=transforms.Compose([
+            Normalizer(mean=params.mean, std=params.std),
+            Augmenter(),
+            Resizer(input_sizes[opt.compound_coef]),
+        ]),
+    )
     training_generator = DataLoader(training_set, **training_params)
 
-    val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.val_set,
-                          transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
-                                                        Resizer(input_sizes[opt.compound_coef])]))
+    val_set = CocoDataset(
+        root_dir=os.path.join(opt.data_path, params.project_name),
+        set=params.val_set,
+        transform=transforms.Compose([
+            Normalizer(mean=params.mean, std=params.std),
+            Resizer(input_sizes[opt.compound_coef])
+        ])
+    )
     val_generator = DataLoader(val_set, **val_params)
 
-    model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
-                                 ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
+    model = EfficientDetBackbone(
+        num_classes=len(params.obj_list),
+        compound_coef=opt.compound_coef,
+        ratios=eval(params.anchors_ratios),
+        scales=eval(params.anchors_scales),
+    )
 
     # load last weights
     if opt.load_weights is not None:
@@ -131,7 +225,9 @@ def train(opt):
         else:
             weights_path = get_last_weights(opt.saved_path)
         try:
-            last_step = int(os.path.basename(weights_path).split('_')[-1].split('.')[0])
+            last_step = int(
+                os.path.basename(weights_path).split('_')[-1].split('.')[0]
+            )
         except:
             last_step = 0
 
@@ -140,9 +236,16 @@ def train(opt):
         except RuntimeError as e:
             print(f'[Warning] Ignoring {e}')
             print(
-                '[Warning] Don\'t panic if you see this, this might be because you load a pretrained weights with different number of classes. The rest of the weights should be loaded already.')
+                '[Warning] Don\'t panic if you see this, this might be '
+                'because you load a pretrained weights with different '
+                'number of classes. The rest of the weights should be '
+                'loaded already.'
+            )
 
-        print(f'[Info] loaded weights: {os.path.basename(weights_path)}, resuming checkpoint from step: {last_step}')
+        print(
+            f'[Info] loaded weights: {os.path.basename(weights_path)}, '
+            f'resuming checkpoint from step: {last_step}'
+        )
     else:
         last_step = 0
         print('[Info] initializing weights...')
@@ -161,11 +264,11 @@ def train(opt):
         print('[Info] freezed backbone')
 
     # https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
-    # apply sync_bn when using multiple gpu and batch_size per gpu is lower than 4
-    #  useful when gpu memory is limited.
-    # because when bn is disable, the training will be very unstable or slow to converge,
-    # apply sync_bn can solve it,
-    # by packing all mini-batch across all gpus as one batch and normalize, then send it back to all gpus.
+    # apply sync_bn when using multiple gpu and batch_size per gpu is < 4
+    # useful when gpu memory is limited,  because when bn is disable,
+    # the training will be very unstable or slow to converge, apply
+    # sync_bn can solve it, by packing all mini-batch across all gpus as
+    # one batch and normalize, then send it back to all gpus.
     # but it would also slow down the training by a little bit.
     if params.num_gpus > 1 and opt.batch_size // params.num_gpus < 4:
         model.apply(replace_w_sync_bn)
@@ -173,9 +276,12 @@ def train(opt):
     else:
         use_sync_bn = False
 
-    writer = SummaryWriter(opt.log_path + f'/{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}/')
+    writer = SummaryWriter(
+        opt.log_path + f'/{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}/'
+    )
 
-    # warp the model with loss function, to reduce the memory usage on gpu0 and speedup
+    # warp the model with loss function, to reduce the memory usage on
+    # gpu0 and speedup
     model = ModelWithLoss(model, debug=opt.debug)
 
     if params.num_gpus > 0:
@@ -188,9 +294,16 @@ def train(opt):
     if opt.optim == 'adamw':
         optimizer = torch.optim.AdamW(model.parameters(), opt.lr)
     else:
-        optimizer = torch.optim.SGD(model.parameters(), opt.lr, momentum=0.9, nesterov=True)
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            opt.lr,
+            momentum=0.9,
+            nesterov=True,
+        )
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, patience=3, verbose=True,
+    )
 
     epoch = 0
     best_loss = 1e5
@@ -309,16 +422,21 @@ def train(opt):
                     print('[Info] Stop training at epoch {}. The lowest loss achieved is {}'.format(epoch, best_loss))
                     break
     except KeyboardInterrupt:
-        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+        save_checkpoint(
+            model,
+            f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth',
+        )
         writer.close()
     writer.close()
 
 
 def save_checkpoint(model, name):
-    if isinstance(model, CustomDataParallel):
-        torch.save(model.module.model.state_dict(), os.path.join(opt.saved_path, name))
-    else:
-        torch.save(model.model.state_dict(), os.path.join(opt.saved_path, name))
+    state_dict = (
+        model.module.model.state_dict()
+        if isinstance(model, CustomDataParallel) else
+        model.model.state_dict()
+    )
+    torch.save(state_dict, os.path.join(opt.saved_path, name))
 
 
 if __name__ == '__main__':
