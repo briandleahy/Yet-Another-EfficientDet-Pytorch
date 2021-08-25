@@ -331,12 +331,15 @@ def train(opt):
 
                     if params.num_gpus == 1:
                         # if only one gpu, just send it to cuda:0
-                        # elif multiple gpus, send it to multiple gpus in CustomDataParallel, not here
+                        # elif multiple gpus, send it to multiple gpus
+                        # in CustomDataParallel, not here
                         imgs = imgs.cuda()
                         annot = annot.cuda()
 
                     optimizer.zero_grad()
-                    cls_loss, reg_loss = model(imgs, annot, obj_list=params.obj_list)
+                    cls_loss, reg_loss = model(
+                        imgs, annot, obj_list=params.obj_list,
+                    )
                     cls_loss = cls_loss.mean()
                     reg_loss = reg_loss.mean()
 
@@ -352,11 +355,18 @@ def train(opt):
 
                     progress_bar.set_description(
                         'Step: {}. Epoch: {}/{}. Iteration: {}/{}. Cls loss: {:.5f}. Reg loss: {:.5f}. Total loss: {:.5f}'.format(
-                            step, epoch, opt.num_epochs, iter + 1, num_iter_per_epoch, cls_loss.item(),
-                            reg_loss.item(), loss.item()))
+                            step, epoch, opt.num_epochs, iter + 1,
+                            num_iter_per_epoch, cls_loss.item(),
+                            reg_loss.item(), loss.item(),
+                        )
+                    )
                     writer.add_scalars('Loss', {'train': loss}, step)
-                    writer.add_scalars('Regression_loss', {'train': reg_loss}, step)
-                    writer.add_scalars('Classfication_loss', {'train': cls_loss}, step)
+                    writer.add_scalars(
+                        'Regression_loss', {'train': reg_loss}, step
+                    )
+                    writer.add_scalars(
+                        'Classfication_loss', {'train': cls_loss}, step,
+                    )
 
                     # log learning_rate
                     current_lr = optimizer.param_groups[0]['lr']
@@ -365,7 +375,10 @@ def train(opt):
                     step += 1
 
                     if step % opt.save_interval == 0 and step > 0:
-                        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+                        save_checkpoint(
+                            model,
+                            f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth'
+                        )
                         print('checkpoint...')
 
                 except Exception as e:
@@ -387,7 +400,9 @@ def train(opt):
                             imgs = imgs.cuda()
                             annot = annot.cuda()
 
-                        cls_loss, reg_loss = model(imgs, annot, obj_list=params.obj_list)
+                        cls_loss, reg_loss = model(
+                            imgs, annot, obj_list=params.obj_list,
+                        )
                         cls_loss = cls_loss.mean()
                         reg_loss = reg_loss.mean()
 
@@ -404,7 +419,9 @@ def train(opt):
 
                 print(
                     'Val. Epoch: {}/{}. Classification loss: {:1.5f}. Regression loss: {:1.5f}. Total loss: {:1.5f}'.format(
-                        epoch, opt.num_epochs, cls_loss, reg_loss, loss))
+                        epoch, opt.num_epochs, cls_loss, reg_loss, loss
+                    )
+                )
                 writer.add_scalars('Loss', {'val': loss}, step)
                 writer.add_scalars('Regression_loss', {'val': reg_loss}, step)
                 writer.add_scalars('Classfication_loss', {'val': cls_loss}, step)
@@ -413,13 +430,19 @@ def train(opt):
                     best_loss = loss
                     best_epoch = epoch
 
-                    save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+                    save_checkpoint(
+                        model,
+                        f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth'
+                    )
 
                 model.train()
 
                 # Early stopping
                 if epoch - best_epoch > opt.es_patience > 0:
-                    print('[Info] Stop training at epoch {}. The lowest loss achieved is {}'.format(epoch, best_loss))
+                    print(
+                        f'[Info] Stop training at epoch {epoch}. '
+                        f'The lowest loss achieved is {best_loss}.'
+                    )
                     break
     except KeyboardInterrupt:
         save_checkpoint(
